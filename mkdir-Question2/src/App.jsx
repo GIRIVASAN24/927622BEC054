@@ -1,35 +1,64 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useState } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+function AverageCalculator() {
+  const [numbers, setNumbers] = useState("");
+  const [average, setAverage] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleChange = (e) => {
+    setNumbers(e.target.value);
+  };
+
+  const calculateAverage = async () => {
+    setError(null);
+    setAverage(null);
+
+    // Convert input string to array of numbers
+    const numsArray = numbers
+      .split(",")
+      .map((num) => parseFloat(num.trim()))
+      .filter((num) => !isNaN(num));
+
+    if (numsArray.length === 0) {
+      setError("Please enter valid numbers separated by commas.");
+      return;
+    }
+
+    try {
+      // Replace 'YOUR_API_URL' with the actual microservice URL
+      const response = await fetch("YOUR_API_URL", {
+        method: "POST", // or GET depending on API
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ numbers: numsArray }),
+      });
+
+      if (!response.ok) {
+        throw new Error("API error");
+      }
+
+      const data = await response.json();
+      setAverage(data.average); // assuming API responds with { average: ... }
+    } catch (err) {
+      setError("Failed to fetch average from server.");
+    }
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <h2>Average Calculator</h2>
+      <input
+        type="text"
+        value={numbers}
+        onChange={handleChange}
+        placeholder="Enter numbers separated by commas"
+      />
+      <button onClick={calculateAverage}>Calculate Average</button>
+      {error && <p style={{ color: "red" }}>{error}</p>}
+      {average !== null && <p>Average: {average}</p>}
+    </div>
+  );
 }
 
-export default App
+export default AverageCalculator;
